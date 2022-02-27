@@ -3,12 +3,14 @@ from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
 from flask_cors import CORS
 import probeinterface as pi
+import spikeinterface as si
+import spikeinterface.toolkit as st
+import spikeinterface.sorters as ss
+
 import json
 
 #spikeinterface imports
 import spikeinterface as si 
-import spikeinterface.toolkit as st
-import spikeinterface.sorters as ss
 
 app = Flask(__name__) #boilerplate
 CORS(app)
@@ -31,23 +33,27 @@ processing_pipeline.append(recording)
 class RunPipeline(Resource):
   def post(self):
     pipeline = request.get_json()
-    i=0
+    # print(pipeline)
+    print(pipeline[0]["nameOfStep"])
+    i = 0
     for oneStep in pipeline:
       if(oneStep["category"] == "preprocessing"):
         if(oneStep["nameOfStep"] == "Bandpass filter"):
-          rec = st.bandpass_filter(processing_pipeline[i], int(oneStep["freq_min"]), int(oneStep["freq_max"]), int(oneStep["margin_ms"]), None if oneStep["dType"]=="None" else oneStep["dType"])
-          processing_pipeline.append(rec)
+          print("bandpass woot woot")
+          r = st.bandpass_filter(processing_pipeline[i], float(oneStep["freq_min"]), float(oneStep["freq_max"]), int(oneStep["margin_ms"]), None if oneStep["dType"]=="None" else  oneStep["dType"])
+          processing_pipeline.append(r)
           i+=1
-          print('bandpass')
         elif(oneStep["nameOfStep"] == "Scale"):
-          print("Scaling")
+          r = st.scale(processing_pipeline[i])
+          processing_pipeline.append(r)
+          i+=1
+
       elif(oneStep["category"] == "spikesorting"): 
-        if(oneStep["nameOfStep"] == "Herdingspikes2"):
-          print("Spikesorting")
-          params = ss.get_default_params('herdingspikes')
-          print(params)
-          rec = ss.run_herdingspikes(processing_pipeline[i], output_folder='results_HS', 
-                                  filter=False, verbose=True)                 
+        if(oneStep["nameOfStep"] == "herdingspikes"):
+          s = ss.run_sorter(oneStep["nameOfStep"], processing_pipeline[i])
+          processing_pipeline.append(s)
+          i+=1
+          print(processing_pipeline)
 api.add_resource(RunPipeline, '/run')
 
 #boilerplate 
