@@ -1,4 +1,3 @@
-from time import process_time_ns
 from flask import Flask, jsonify, request
 from flask_restful import Resource, Api
 from flask_cors import CORS
@@ -49,8 +48,9 @@ class RunPipeline(Resource):
           i+=1
 
       elif(oneStep["category"] == "spikesorting"): 
-        if(oneStep["nameOfStep"] == "herdingspikes"):
-          s = ss.run_sorter(oneStep["nameOfStep"], processing_pipeline[i])
+        if(oneStep["nameOfStep"] == "Herdingspikes2"):
+          print("entered")
+          s = ss.run_sorter(oneStep["filename"], processing_pipeline[i])
           processing_pipeline.append(s)
           i+=1
           print(processing_pipeline)
