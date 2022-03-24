@@ -36,12 +36,12 @@ class RunPipeline(Resource):
       #add error handling from here with informative stack trace
       if(oneStep["category"] == "preprocessing"):
         if(oneStep["nameOfStep"] == "Bandpass filter"):
-          r = st.bandpass_filter(self.processing_pipeline[i], float(oneStep["freq_min"]), float(oneStep["freq_max"]), int(oneStep["margin_ms"]), None if oneStep["dType"]=="None" else  oneStep["dType"], sorter_params=jsonify(oneStep["params"]))
+          r = st.bandpass_filter(self.processing_pipeline[i], float(oneStep["params"]["freq_min"]), float(oneStep["params"]["freq_max"]), int(oneStep["params"]["margin_ms"]), None if oneStep["params"]["dType"]=="None" else  oneStep["params"]["dType"], sorter_params=jsonify(oneStep["params"]))
           self.processing_pipeline.append(r)
           i+=1
           
         elif(oneStep["nameOfStep"] == "Scale"):
-          r = st.scale(self.processing_pipeline[i], float(oneStep["gain"]), float(oneStep["offset"]))
+          r = st.scale(self.processing_pipeline[i], float(oneStep["params"]["gain"]), float(oneStep["params"]["offset"]))
           self.processing_pipeline.append(r)
           print(self.processing_pipeline)
           i+=1
@@ -55,7 +55,7 @@ class RunPipeline(Resource):
         print(self.processing_pipeline[i])
         print("Before running sorter")
         try:
-          s = ss.run_sorter(oneStep["filename"], self.processing_pipeline[i], study_folder)
+          s = ss.run_sorter(oneStep["params"]["filename"], self.processing_pipeline[i], study_folder)
         except Exception as e: 
           print("Printing the exception")
           print("------")
