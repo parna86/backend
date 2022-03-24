@@ -36,7 +36,7 @@ class RunPipeline(Resource):
       #add error handling from here with informative stack trace
       if(oneStep["category"] == "preprocessing"):
         if(oneStep["nameOfStep"] == "Bandpass filter"):
-          r = st.bandpass_filter(self.processing_pipeline[i], float(oneStep["freq_min"]), float(oneStep["freq_max"]), int(oneStep["margin_ms"]), None if oneStep["dType"]=="None" else  oneStep["dType"])
+          r = st.bandpass_filter(self.processing_pipeline[i], float(oneStep["freq_min"]), float(oneStep["freq_max"]), int(oneStep["margin_ms"]), None if oneStep["dType"]=="None" else  oneStep["dType"], sorter_params=jsonify(oneStep["params"]))
           self.processing_pipeline.append(r)
           i+=1
           
