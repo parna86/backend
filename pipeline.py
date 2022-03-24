@@ -46,27 +46,24 @@ class RunPipeline(Resource):
           print(self.processing_pipeline)
           i+=1
         
-      elif(oneStep["category"] == "spikesorting"): 
-        if(oneStep["nameOfStep"] == "Herdingspikes2"):
-          study_path = Path('./')
-          study_folder = study_path / 'output/'
-          if not study_folder.is_dir():
-            print('Setting up study folder:', study_folder)
-            os.mkdir(study_folder)
-          print(self.processing_pipeline[i])
-          print("Before running sorter")
-          
-          try:
-            s = ss.run_sorter(oneStep["filename"], self.processing_pipeline[i], study_folder)
-          except Exception as e: 
-            print("Printing the exception")
-            print("------")
-            print(traceback.format_exc());
-            print("------")
-            print("----------")
-            abort(400, "Spikesorter failed with an issue");
-          i+=1
-          self.processing_pipeline.append(s)
-          return(jsonify(self.processing_pipeline[i-1])) 
-         
+      elif(oneStep["category"] == "spikesorting"):
+        study_path = Path('./')
+        study_folder = study_path / 'output/'
+        if not study_folder.is_dir():
+          print('Setting up study folder:', study_folder)
+          os.mkdir(study_folder)
+        print(self.processing_pipeline[i])
+        print("Before running sorter")
+        try:
+          s = ss.run_sorter(oneStep["filename"], self.processing_pipeline[i], study_folder)
+        except Exception as e: 
+          print("Printing the exception")
+          print("------")
+          print(traceback.format_exc());
+          print("------")
+          print("----------")
+          abort(400, "Spikesorter failed with an issue");
+        i+=1
+        self.processing_pipeline.append(s)
+        return(jsonify(self.processing_pipeline[i-1])) 
     return
