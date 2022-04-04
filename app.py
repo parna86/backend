@@ -12,9 +12,9 @@ import json
 import spikeinterface as si 
 
 app = Flask(__name__) #boilerplate
-CORS(app)
-app.config['CORS_HEADERS'] = 'Content-Type'
 api = Api(app)
+CORS(app, resources={r"/*": {"origins": "*"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 
           
 api.add_resource(RunPipeline, '/run')
