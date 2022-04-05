@@ -55,26 +55,50 @@ class RunPipeline(Resource):
         fileNameSplit = nameOfDataset.rsplit('.', 1)
         fileFormat = fileNameSplit[len(fileNameSplit) - 1]
         if(fileFormat == 'brw'):
-          recording = se.BiocamRecordingExtractor(recording_file)
-          self.processing_pipeline.append(recording)
+          try:
+            recording = se.BiocamRecordingExtractor(recording_file)
+            self.processing_pipeline.append(recording)
+            listOfInformation = []
+            listOfInformation.append({"Number of channels", recording.get_num_channels()})
+            listOfInformation.append({"Channel locations", str(recording.get_channel_locations())})
+            output["BioCamRecordingExtractor"] = listOfInformation
+          except Exception as e:
+            print(e)
+            abort(400, "Error in parsing biocam format")
         elif(fileFormat == 'nwb'):
-          recording = se.NwbRecordingExtractor(recording_file)
-          recording_shorter = recording.frame_slice(0, 60000)
-          self.processing_pipeline.append(recording_shorter)
+          try:
+            recording = se.NwbRecordingExtractor(recording_file)
+            recording_shorter = recording.frame_slice(0, 60000)
+            self.processing_pipeline.append(recording_shorter)
+          except Exception as e:
+            print(e)
+            abort(400, "Error in parsing nwb format")
         elif(fileFormat == 'h5'):
-          recording = se.MEArecRecordingExtractor(recording_file)
-          self.processing_pipeline.append(recording)
+          try:
+            recording = se.MEArecRecordingExtractor(recording_file)
+            self.processing_pipeline.append(recording)
+          except Exception as e:
+            print(e)
+            abort(400, "Error in parsing MEArc dataset")
         else:
           abort(400, "Data format not supported at the moment")        
       elif(oneStep["category"] == "preprocessing"):
         if(oneStep["nameOfStep"] == "Bandpass filter"):
-          r = st.bandpass_filter(self.processing_pipeline[i], float(oneStep["params"]["freq_min"]), float(oneStep["params"]["freq_max"]), int(oneStep["params"]["margin_ms"]), None if oneStep["params"]["dType"]=="None" else  oneStep["params"]["dType"])
-          self.processing_pipeline.append(r)
+          try:
+            r = st.bandpass_filter(self.processing_pipeline[i], float(oneStep["params"]["freq_min"]), float(oneStep["params"]["freq_max"]), int(oneStep["params"]["margin_ms"]), None if oneStep["params"]["dType"]=="None" else  oneStep["params"]["dType"])
+            self.processing_pipeline.append(r)
+          except Exception as e:
+            print(e)
+            abort(400, "Error in running bandpass filter")
           i+=1   
         elif(oneStep["nameOfStep"] == "Scale"):
-          r = st.scale(self.processing_pipeline[i], float(oneStep["params"]["gain"]), float(oneStep["params"]["offset"]))
-          self.processing_pipeline.append(r)
-          print(self.processing_pipeline)
+          try:
+            r = st.scale(self.processing_pipeline[i], float(oneStep["params"]["gain"]), float(oneStep["params"]["offset"]))
+            self.processing_pipeline.append(r)
+            print(self.processing_pipeline)
+          except Exception as e:
+            print(e)
+            abort(400, "Error in running scale preprocessor")
           i+=1
       elif(oneStep["category"] == "spikesorting"):
         study_path = Path('./')
@@ -87,10 +111,14 @@ class RunPipeline(Resource):
         print(oneStep["params"])
         try:
           s = ss.run_sorter(filename, self.processing_pipeline[i])
-          print(s)
+          listOfInformation = []
+          listOfInformation.append({"Number of units", s.get_num_units()})
+          listOfInformation.append({"Sampling frequency", str(s.get_sampling_frequency())})
+          output[filename] = listOfInformation
         except Exception as e: 
           print(traceback.format_exc());
-          abort(400, "Spikesorter failed with an issue");
+          abort(400, "Spikesorter failed with an issue: \n".join(e));
         i+=1
+        
         self.processing_pipeline.append(s)
-    return(str(self.processing_pipeline))
+    return(str(output))
